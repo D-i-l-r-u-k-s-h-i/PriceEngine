@@ -1,6 +1,7 @@
 package com.assessement.price_engine.Service;
 
 import com.assessement.price_engine.DTOs.ProductDTO;
+import com.assessement.price_engine.DTOs.ProductPricesDTO;
 import com.assessement.price_engine.DTOs.ProductQtyDTO;
 import com.assessement.price_engine.Entities.Product;
 import com.assessement.price_engine.Repositories.ProductRepository;
@@ -30,7 +31,7 @@ public class CalculationService {
             productQtyDTO.setQuantityType("UNITS");
 
             HashMap<Integer,Double> unitPrices=new HashMap<>();
-//            IntStream.range(1, 51).forEach(i -> {
+//            IntStream.range(1, 51).parallel.forEach(i -> {
 //                productQtyDTO.setQuantity(i);
 //                unitPrices.put(i,calculatePricePerProductQty(productQtyDTO));
 //            });
@@ -51,7 +52,7 @@ public class CalculationService {
 
         double totPriceForQtyOfProduct;
         double priceForCartons;
-        double priceForUnits;
+        double priceForUnits=0.0;
 
         if(seperatedQtyTypes.get("no_of_cartons")>=3){
             //apply discount
@@ -61,7 +62,9 @@ public class CalculationService {
             priceForCartons=seperatedQtyTypes.get("no_of_cartons")*product.getPricePerCarton();
         }
         //(price per unit + percentage increase) * total no. of single units
-        priceForUnits=((product.getPricePerCarton()/product.getNoOfUnitsPerCarton()*seperatedQtyTypes.get("no_of_units"))+product.getPricePerCarton()*0.3);
+        if(seperatedQtyTypes.get("no_of_units")!=0){
+            priceForUnits=((product.getPricePerCarton()/product.getNoOfUnitsPerCarton()*seperatedQtyTypes.get("no_of_units"))+product.getPricePerCarton()*0.3);
+        }
 
         totPriceForQtyOfProduct=priceForCartons+priceForUnits;
         return totPriceForQtyOfProduct;
@@ -74,13 +77,6 @@ public class CalculationService {
         int no_of_cartons=0;
 
         if(productQtyDTO.getQuantityType().equals("UNITS")){
-            //for quantities less than 1 carton
-//            if(productQtyDTO.getQuantity()%product.getNoOfUnitsPerCarton()<product.getNoOfUnitsPerCarton() && productQtyDTO.getQuantity()/product.getNoOfUnitsPerCarton()==0){
-//                no_of_units=productQtyDTO.getQuantity();
-//            }
-//            else{
-//
-//            }
             //div
             no_of_cartons=productQtyDTO.getQuantity()/product.getNoOfUnitsPerCarton();
             //mod
@@ -95,6 +91,17 @@ public class CalculationService {
         qtys.put("no_of_cartons",no_of_cartons);
 
         return qtys;
+    }
+
+    public List<ProductDTO> getAllProducts(){
+        List<Product> products=productRepository.findAll();
+
+        return Utils.mapAll(products,ProductDTO.class);
+    }
+
+    public ProductPricesDTO getAmountForProductQuantity(ProductQtyDTO productQtyDTO){
+        double amount=calculatePricePerProductQty(productQtyDTO);
+        return new ProductPricesDTO(productQtyDTO.getProductId(),amount);
     }
 
 }
