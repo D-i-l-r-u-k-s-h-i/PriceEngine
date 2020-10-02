@@ -1,5 +1,6 @@
 package com.assessement.price_engine.DTOs;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.util.HashMap;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class ProductDTO implements Serializable {
 
     private long productId;
